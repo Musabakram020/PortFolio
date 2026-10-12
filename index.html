@@ -1,80 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Portfolio</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Grass Escape</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width:100%; height:100%; margin:0; overflow:hidden; background:#102631; color:#fff; font-family:Arial,sans-serif; }
+    body { -webkit-user-select:none; user-select:none; overscroll-behavior:none; }
+    #viewport { position:fixed; inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); display:grid; place-items:center; }
+    #game { position:relative; width:min(100%, calc((100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 9 / 16)); aspect-ratio:9 / 16; overflow:hidden; }
+    canvas { display:block; width:100%; height:100%; outline:none; touch-action:none; }
+    #loading { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; background:#102631; padding:24px; text-align:center; }
+    #loading[hidden], #retry[hidden] { display:none; }
+    h1 { margin:0; font-size:clamp(28px,5vw,44px); }
+    p { margin:0; font-size:18px; line-height:1.5; max-width:480px; }
+    progress { width:min(320px,80vw); height:16px; accent-color:#66dcc0; }
+    button { border:0; border-radius:14px; padding:16px 36px; background:#66dcc0; color:#102631; font-size:18px; font-weight:bold; cursor:pointer; }
+    button:hover { background:#a3efdc; } button:active { transform:scale(.96); }
+  </style>
 </head>
 <body>
-  <header>
-    <nav class="container">
-      <h1>MyPortfolio</h1>
-      <div class="links">
-        <a href="#home">Home</a>
-        <a href="#about">About</a>
-        <a href="#projects">Projects</a>
-        <a href="#contact">Contact</a>
-      </div>
-    </nav>
-  </header>
-
-  <section id="home" class="hero">
-    <div class="container">
-      <p>Hello, I'm</p>
-      <h2>Your Name</h2>
-      <h3>Web Designer & Developer</h3>
-      <p>I create clean, simple, and responsive websites.</p>
-      <a class="button" href="#projects">View My Work</a>
+  <div id="viewport"><main id="game">
+    <canvas id="unity-canvas" width="1080" height="1920" tabindex="0" aria-label="Grass Escape game"></canvas>
+    <div id="loading" role="status">
+      <h1>Grass Escape</h1>
+      <p id="status">Getting your lawn ready...</p>
+      <progress id="progress" max="1" value="0" aria-label="Loading game"></progress>
+      <button id="retry" hidden>TRY AGAIN</button>
     </div>
-  </section>
-
-  <section id="about" class="section">
-    <div class="container">
-      <h2>About Me</h2>
-      <p>
-        I am a creative developer who enjoys building simple and user-friendly
-        websites using HTML and CSS. Replace this text with your own introduction.
-      </p>
-    </div>
-  </section>
-
-  <section id="projects" class="section alt">
-    <div class="container">
-      <h2>My Projects</h2>
-      <div class="projects">
-        <article class="card">
-          <div class="placeholder">Project 1</div>
-          <h3>Portfolio Website</h3>
-          <p>A simple personal portfolio website.</p>
-        </article>
-
-        <article class="card">
-          <div class="placeholder">Project 2</div>
-          <h3>Landing Page</h3>
-          <p>A responsive landing page for a business.</p>
-        </article>
-
-        <article class="card">
-          <div class="placeholder">Project 3</div>
-          <h3>Creative Project</h3>
-          <p>Add your own project description here.</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <section id="contact" class="section">
-    <div class="container">
-      <h2>Contact Me</h2>
-      <p>Email: yourname@example.com</p>
-      <p>Location: Your City</p>
-      <a class="button" href="mailto:yourname@example.com">Send Email</a>
-    </div>
-  </section>
-
-  <footer>
-    <p>© 2026 Your Name. All rights reserved.</p>
-  </footer>
+  </main></div>
+  <script>
+    const canvas = document.getElementById('unity-canvas');
+    const loading = document.getElementById('loading');
+    const progress = document.getElementById('progress');
+    const status = document.getElementById('status');
+    const retry = document.getElementById('retry');
+    function failed(error) {
+      console.error(error);
+      loading.hidden = false;
+      status.textContent = 'The game could not load. Check your connection and try again.';
+      progress.hidden = true;
+      retry.hidden = false;
+    }
+    retry.addEventListener('click', () => location.reload());
+    canvas.addEventListener('pointerdown', () => canvas.focus());
+    canvas.addEventListener('contextmenu', event => event.preventDefault());
+    const loader = document.createElement('script');
+    loader.src = 'Build/Grass.loader.js';
+    loader.onerror = () => failed('Game loader unavailable');
+    loader.onload = () => {
+      createUnityInstance(canvas, {
+        arguments: [],
+        dataUrl: 'Build/Grass.data.br',
+        frameworkUrl: 'Build/Grass.framework.js.br',
+        codeUrl: 'Build/Grass.wasm.br',
+        streamingAssetsUrl: 'StreamingAssets',
+        companyName: "FoxGames",
+        productName: "ArrowOut",
+        productVersion: "1.0",
+        showBanner: (message, type) => { if (type === 'error') failed(message); else console.warn(message); }
+      }, value => { progress.value = value; }).then(() => {
+        loading.hidden = true;
+        canvas.focus();
+      }).catch(failed);
+    };
+    document.body.appendChild(loader);
+  </script>
 </body>
 </html>
